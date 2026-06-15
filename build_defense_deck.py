@@ -239,6 +239,111 @@ bullets(s, [
     "“Does it generalise?” → Tested on a future unseen year (2024), not random split.",
 ], width=11.8, size=17)
 
+# ---- speaker / presenter notes (rehearsal script, ~10-12 min total) ----
+NOTES = [
+ # 1 Title
+ "Good morning. My name is Kellen Murerwa and my capstone is a geospatial "
+ "machine-learning and Hidden Markov Model framework that estimates daily "
+ "flood-pressure for the Nyabugogo-Nyabarongo corridor in Kigali. Over the next "
+ "ten minutes I will take you through the problem, the real data, the models, "
+ "and an honest evaluation. (~45s)",
+ # 2 Problem & Objective
+ "Kigali floods repeatedly after heavy rain. The official hazard maps are "
+ "valuable but static: they tell you WHERE flooding is possible, not WHEN or how "
+ "WIDELY pressure builds after rainfall. My objective is a time-aware "
+ "decision-support tool that estimates Low, Moderate or High flood-pressure each "
+ "day and is validated against the official flood polygons. It complements, not "
+ "replaces, early-warning systems.",
+ # 3 Study area
+ "I work on a 250 m grid of 729 cells over the Nyabugogo-Nyabarongo corridor, "
+ "daily from 2018 to 2024 — about 1.86 million cell-day records. I deliberately "
+ "shifted the study box south so it sits on the real official flood zone. The "
+ "map on the right is my model's 2024 high-pressure frequency, with the official "
+ "polygons outlined in blue.",
+ # 4 Architecture
+ "The system has four layers: real data; a label layer; the models; and "
+ "validation plus delivery. Each is a separate reproducible module, all driven "
+ "by a single main.py entry point, so the whole pipeline reruns end to end.",
+ # 5 Real data
+ "Every predictor is real and retrieved live — nothing is assumed. Rainfall from "
+ "Open-Meteo ERA5, elevation and slope from SRTM, rivers, roads and buildings "
+ "from OpenStreetMap, and the official flood polygons from the government portal, "
+ "geodata.rw. To prove it is real: this is a live ERA5 pull for my area for "
+ "January 2024 — 131.2 mm of rain, with the actual daily values. The official "
+ "layer flags 136 of my 729 cells as flood-prone.",
+ # 6 Features & labels
+ "This is the question I most expect from you, so let me address it directly. My "
+ "label is a flood-pressure score from rainfall and terrain. If I stopped there, "
+ "the label would be a formula the model could simply reverse-engineer — and "
+ "indeed an early version scored 0.99 F1, which is a warning sign, not a success. "
+ "So I added an unobserved drainage-and-noise term the model cannot see, which "
+ "drops performance to a realistic 0.83. Flood-pressure is a derived risk state, "
+ "not a confirmed flood event.",
+ # 7 Models
+ "I benchmark against two naive baselines so the machine learning has to earn its "
+ "place, then interpretable models, then Random Forest and XGBoost with SHAP, and "
+ "finally a Hidden Markov Model for the time dimension. Crucially I evaluate on a "
+ "temporal hold-out: I train on 2018 to 2023 and test on the completely unseen "
+ "year 2024 — so this is generalisation, not memorisation.",
+ # 8 Results
+ "On 2024, Random Forest is best with a macro-F1 of 0.831 and high-pressure "
+ "recall of 0.867 — both above the 0.75 and 0.80 targets. XGBoost is close "
+ "behind. Both baselines are clearly beaten — the rainfall-only baseline reaches "
+ "just 0.62 — which proves the geospatial context adds real value. The confusion "
+ "matrix shows strong Low and High detection; most error is on the transitional "
+ "Moderate class, which is expected.",
+ # 9 Explainability
+ "SHAP confirms the model is hydrologically sensible: 3- and 7-day rainfall "
+ "dominate, followed by low elevation and closeness to a river. That is exactly "
+ "the physical story of urban flooding, and it makes the model auditable rather "
+ "than a black box.",
+ # 10 HMM
+ "The HMM captures persistence. The self-transition probabilities are about 0.83, "
+ "0.80 and 0.91, meaning once a cell enters high pressure after sustained rain it "
+ "tends to stay there, and it moves through neighbouring states rather than "
+ "jumping. Next-step accuracy is 0.45 against a random baseline of 0.33.",
+ # 11 Spatial validation
+ "Here is my most honest slide. My original target was 70% of predicted-high "
+ "cells inside the official polygons. But that layer covers only 19% of my "
+ "corridor, so 70% is mathematically impossible unless I make the label circular. "
+ "I therefore reframed it to enrichment and an odds ratio. Predicted high-pressure "
+ "is 1.59 times more concentrated in official zones than chance, and official "
+ "cells are flagged high 1.84 times more often than others — and the model never "
+ "saw those polygons in training. It rediscovers the official zone and extends it, "
+ "which is the core contribution.",
+ # 12 Dashboard
+ "Everything is delivered through a Streamlit dashboard. You pick a date, see the "
+ "predicted map, overlay the official polygons, and click any cell to see its "
+ "rainfall history and the model's probabilities. It turns a model into a tool a "
+ "city officer can actually use.",
+ # 13 ERA5 vs CHIRPS
+ "On data choice: I use ERA5 because it is the only source I can retrieve "
+ "reproducibly and keylessly, as I just demonstrated live. CHIRPS is "
+ "scientifically preferable for African rainfall, but I actually tested two "
+ "access routes — the IRI Data Library and ClimateSERV — and both failed without "
+ "heavy tooling, so I document it as a validation extension. Meteo Rwanda is the "
+ "gold standard but has no open API and needs a formal request.",
+ # 14 Limitations
+ "I am clear about limitations: my labels are flood-pressure, not confirmed "
+ "events; ERA5 is coarser than a dense gauge network; and the official polygons "
+ "are low-resolution. Future work is incident validation with MINEMA, blending in "
+ "CHIRPS and Meteo Rwanda, adding wetness indices, hyper-parameter tuning, and an "
+ "operational daily dashboard.",
+ # 15 Conclusion
+ "To conclude: all five objectives are met on real, open data with a strict "
+ "temporal hold-out. The framework is accurate, interpretable, agrees with and "
+ "extends the official flood map, and is fully reproducible. Thank you — I "
+ "welcome your questions.",
+ # 16 Q&A
+ "Backup answers for likely questions — keep these crisp: circularity is handled "
+ "by the unobserved noise term; ERA5 is chosen for reproducibility with CHIRPS as "
+ "future work; the 70% miss is due to a coarse 19% official layer, reframed to "
+ "enrichment; pressure versus event is a scope decision; and generalisation is "
+ "shown by testing on a future unseen year.",
+]
+for sl, note in zip(prs.slides, NOTES):
+    sl.notes_slide.notes_text_frame.text = note
+
 out = ROOT / "Flood_Risk_Defense_Slides.pptx"
 prs.save(out)
-print("Saved", out, "—", len(prs.slides._sldIdLst), "slides")
+print("Saved", out, "—", len(prs.slides._sldIdLst), "slides,", len(NOTES), "notes")
