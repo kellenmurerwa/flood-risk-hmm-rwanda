@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# Generated data & model artifacts (reproducible via `python main.py all`)
+data_cache/
+model_outputs/
+model_outputs_real/
+*.parquet
+real_flood_dataset_sample.csv
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Keep: source .py, requirements.txt, README.md, proposal .docx/.pdf,
+#       real_grid_cells.csv, the original .xlsx
