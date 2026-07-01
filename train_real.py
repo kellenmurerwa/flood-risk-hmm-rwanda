@@ -44,17 +44,38 @@ FEATURES = ["rainfall_1d_mm", "rainfall_3d_mm", "rainfall_7d_mm", "rainfall_14d_
 
 
 def load():
-    df = pd.read_parquet(ROOT / "real_flood_dataset.parquet")
+    # Read only the columns the pipeline uses (features + label + keys). On a
+    # 1.86M-row table this trims hundreds of MB from peak RAM, which matters for
+    # the RandomForest fit on memory-constrained machines. No effect on results.
+    cols = FEATURES + ["flood_pressure_state", "date", "grid_id"]
+    df = pd.read_parquet(ROOT / "real_flood_dataset.parquet", columns=cols)
     df["date"] = pd.to_datetime(df["date"])
     df["y"] = df["flood_pressure_state"].map(C2I)
     return df
 
 
+# Three-way TEMPORAL split (no shuffling -- respects time ordering so we never
+# train on the future). Train fits parameters, validation is the held-out year
+# used to sanity-check generalisation / catch over-fitting, and 2024 is the final
+# untouched test year reported as the headline result.
+SPLIT_PROTOCOL = {
+    "type": "temporal (chronological, no shuffle)",
+    "train": "2018-2022 (fit model parameters)",
+    "validation": "2023 (held-out year: generalisation / over-fit check)",
+    "test": "2024 (final untouched hold-out: headline metrics)",
+    "note": ("Cells are NOT split across sets -- every grid cell appears in all "
+             "three periods; only the time axis is partitioned, which is the "
+             "correct protocol for a temporal forecasting task."),
+}
+
+
 def temporal_split(df):
-    tr = df[df["date"].dt.year <= 2023].copy()
+    tr = df[df["date"].dt.year <= 2022].copy()
+    va = df[df["date"].dt.year == 2023].copy()
     te = df[df["date"].dt.year == 2024].copy()
-    print(f"[split] train {len(tr)} rows (2018-2023) | test {len(te)} rows (2024)")
-    return tr, te
+    print(f"[split] train {len(tr)} rows (2018-2022) | "
+          f"val {len(va)} rows (2023) | test {len(te)} rows (2024)")
+    return tr, va, te
 
 
 def thr_baseline(df, lo, hi):
@@ -62,47 +83,69 @@ def thr_baseline(df, lo, hi):
     return np.where(r <= lo, 0, np.where(r <= hi, 1, 2))
 
 
-def supervised(tr, te):
+def _metrics(y, p):
+    return {
+        "macro_f1": float(f1_score(y, p, average="macro")),
+        "accuracy": float(accuracy_score(y, p)),
+        "high_recall": float(recall_score(y, p, labels=[2], average="macro")),
+    }
+
+
+def supervised(tr, va, te):
     Xtr, ytr = tr[FEATURES].values, tr["y"].values
+    Xva, yva = va[FEATURES].values, va["y"].values
     Xte, yte = te[FEATURES].values, te["y"].values
     models = {
         "LogisticRegression": make_pipeline(StandardScaler(),
             LogisticRegression(max_iter=2000)),
         "DecisionTree": DecisionTreeClassifier(max_depth=8, random_state=42),
+        # max_leaf_nodes hard-bounds the forest size (~0.2 GB for 300 trees) so
+        # the whole pipeline trains in RAM on an 8 GB laptop without leaning on
+        # the pagefile -- unbounded trees on 1.3M rows grow a multi-GB forest that
+        # OOMs on modest machines. This trades a small amount of accuracy for
+        # robust, laptop-reproducible training (a deliberate engineering choice).
+        # n_jobs is capped (not -1) for the same peak-RAM reason.
         "RandomForest": RandomForestClassifier(n_estimators=300, min_samples_leaf=5,
-            random_state=42, n_jobs=-1),
+            max_leaf_nodes=4096, random_state=42, n_jobs=2),
         "XGBoost": xgb.XGBClassifier(n_estimators=400, max_depth=5,
             learning_rate=0.07, subsample=0.9, colsample_bytree=0.9,
             tree_method="hist", objective="multi:softprob", num_class=3,
-            eval_metric="mlogloss", random_state=42, n_jobs=-1),
+            eval_metric="mlogloss", random_state=42, n_jobs=2),
     }
     res, preds = {}, {}
     for name, m in models.items():
         m.fit(Xtr, ytr)
-        p = m.predict(Xte)
-        preds[name] = p
-        res[name] = {
-            "macro_f1": float(f1_score(yte, p, average="macro")),
-            "accuracy": float(accuracy_score(yte, p)),
-            "high_recall": float(recall_score(yte, p, labels=[2], average="macro")),
-        }
-        print(f"  {name:18s} macroF1={res[name]['macro_f1']:.3f} "
-              f"acc={res[name]['accuracy']:.3f} HighRecall={res[name]['high_recall']:.3f}")
+        ptr, pva, pte = m.predict(Xtr), m.predict(Xva), m.predict(Xte)
+        preds[name] = pte                      # test preds used downstream
+        # Top-level keys stay the TEST metrics (headline / backward compatible);
+        # `splits` adds the per-split (train/validation/test) breakdown the
+        # supervisor asked for -- so over-fitting is visible as a train>>test gap.
+        res[name] = dict(_metrics(yte, pte))
+        res[name]["splits"] = {"train": _metrics(ytr, ptr),
+                               "validation": _metrics(yva, pva),
+                               "test": _metrics(yte, pte)}
+        s = res[name]["splits"]
+        print(f"  {name:18s} macroF1 train={s['train']['macro_f1']:.3f} "
+              f"val={s['validation']['macro_f1']:.3f} test={s['test']['macro_f1']:.3f} "
+              f"| HighRecall(test)={res[name]['high_recall']:.3f}")
 
-    # baselines (thresholds learned on train rainfall terciles)
+    # baselines (thresholds learned on TRAIN rainfall terciles, then applied
+    # unchanged to every split so the comparison is honest)
     lo, hi = tr["rainfall_3d_mm"].quantile([1/3, 2/3])
-    bp = thr_baseline(te, lo, hi)
-    res["RainfallThreshold"] = {
-        "macro_f1": float(f1_score(yte, bp, average="macro")),
-        "accuracy": float(accuracy_score(yte, bp)),
-        "high_recall": float(recall_score(yte, bp, labels=[2], average="macro"))}
-    pp = np.where(te["flood_polygon_intersection"] == 1, 2, 0)
-    res["StaticPolygon"] = {
-        "macro_f1": float(f1_score(yte, pp, average="macro")),
-        "accuracy": float(accuracy_score(yte, pp)),
-        "high_recall": float(recall_score(yte, pp, labels=[2], average="macro"))}
-    for b in ["RainfallThreshold", "StaticPolygon"]:
-        print(f"  {b:18s} macroF1={res[b]['macro_f1']:.3f} "
+    baseline_preds = {
+        "RainfallThreshold": {"train": thr_baseline(tr, lo, hi),
+                              "validation": thr_baseline(va, lo, hi),
+                              "test": thr_baseline(te, lo, hi)},
+        "StaticPolygon": {
+            "train": np.where(tr["flood_polygon_intersection"] == 1, 2, 0),
+            "validation": np.where(va["flood_polygon_intersection"] == 1, 2, 0),
+            "test": np.where(te["flood_polygon_intersection"] == 1, 2, 0)},
+    }
+    ys = {"train": ytr, "validation": yva, "test": yte}
+    for b, sp in baseline_preds.items():
+        res[b] = dict(_metrics(yte, sp["test"]))
+        res[b]["splits"] = {k: _metrics(ys[k], sp[k]) for k in ys}
+        print(f"  {b:18s} macroF1(test)={res[b]['macro_f1']:.3f} "
               f"acc={res[b]['accuracy']:.3f} HighRecall={res[b]['high_recall']:.3f}  (baseline)")
     return models, res, preds, yte
 
@@ -223,10 +266,10 @@ def main():
     df = load()
     print(f"Rows {len(df)} | cells {df['grid_id'].nunique()} | "
           f"days {df['date'].nunique()} | classes {df['flood_pressure_state'].value_counts().to_dict()}")
-    tr, te = temporal_split(df)
+    tr, va, te = temporal_split(df)
 
-    print("\n[Supervised -- temporal hold-out (train<=2023, test=2024)]")
-    models, res, preds, yte = supervised(tr, te)
+    print("\n[Supervised -- temporal split (train 2018-2022, val 2023, test 2024)]")
+    models, res, preds, yte = supervised(tr, va, te)
 
     best = max(["RandomForest", "XGBoost"], key=lambda m: res[m]["macro_f1"])
     # spatial agreement (Obj. 4): share of predicted-High cell-days that fall
@@ -261,13 +304,23 @@ def main():
         "spatial_agreement>=0.70": any(res[m]["spatial_agreement_high_in_zone"] >= 0.70
                                        for m in ["RandomForest", "XGBoost"]),
     }
+    # The flood_polygon feature is upgraded from the terrain-hydrology proxy to
+    # the official MOE polygons once add_official_polygons.py has run (its cached
+    # GeoJSON is then present). Label the source accordingly so the metadata
+    # matches the data actually in the parquet.
+    poly_src = ("Rwanda GeoPortal / MOE official flood-risk polygons (real)"
+                if (ROOT / "data_cache" / "official_flood_polygons.geojson").exists()
+                else "terrain-hydrology susceptibility proxy")
     summary = {"dataset": {"rows": len(df), "cells": int(df["grid_id"].nunique()),
                            "days": int(df["date"].nunique()),
-                           "period": "2018-2024", "test_period": "2024"},
+                           "period": "2018-2024", "test_period": "2024",
+                           "train_rows": len(tr), "validation_rows": len(va),
+                           "test_rows": len(te)},
+               "split_protocol": SPLIT_PROTOCOL,
                "data_sources": {"rainfall": "Open-Meteo ERA5 (real)",
                                 "elevation": "Open-Meteo/SRTM (real)",
                                 "rivers_roads_buildings": "OpenStreetMap Overpass (real)",
-                                "flood_polygon": "terrain-hydrology susceptibility proxy"},
+                                "flood_polygon": poly_src},
                "supervised_results": res, "hmm": hmm_res, "targets_met": tgt}
     (OUT / "results_summary.json").write_text(json.dumps(summary, indent=2, default=str))
 

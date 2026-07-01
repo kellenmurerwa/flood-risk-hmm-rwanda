@@ -1,0 +1,16 @@
+# Render.com Blueprint — free web service for the Streamlit dashboard.
+# Place this file at the REPO ROOT, push to GitHub, then on Render:
+#   New + > Blueprint > pick the repo. Render reads render.yaml automatically.
+# NOTE: real_flood_dataset.parquet and model_outputs_real/ are .gitignored — see
+# DEPLOYMENT.md §3 for committing the runtime artifacts before deploying.
+services:
+  - type: web
+    name: kigali-flood-pressure
+    runtime: python
+    plan: free
+    pythonVersion: "3.11"
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "streamlit run dashboard.py --server.port $PORT --server.address 0.0.0.0 --server.headless true"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"

@@ -1,0 +1,19 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.1, pytest-9.0.1, pluggy-1.6.0 -- C:\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\HP\Downloads\Draft-Captone Proposal Kellen
+plugins: anyio-4.9.0, locust-2.42.5
+collecting ... collected 10 items
+
+Capstone final project/tests/test_pipeline.py::test_model_artefacts_exist PASSED [ 10%]
+Capstone final project/tests/test_pipeline.py::test_model_feature_schema PASSED [ 20%]
+Capstone final project/tests/test_pipeline.py::test_dataset_shape PASSED [ 30%]
+Capstone final project/tests/test_pipeline.py::test_no_nan_in_features PASSED [ 40%]
+Capstone final project/tests/test_pipeline.py::test_label_space_is_valid PASSED [ 50%]
+Capstone final project/tests/test_pipeline.py::test_prediction_shape_and_range PASSED [ 60%]
+Capstone final project/tests/test_pipeline.py::test_predict_proba_is_calibrated PASSED [ 70%]
+Capstone final project/tests/test_pipeline.py::test_2024_holdout_reproduces_headline_metrics PASSED [ 80%]
+Capstone final project/tests/test_pipeline.py::test_summary_targets_consistent PASSED [ 90%]
+Capstone final project/tests/test_pipeline.py::test_spatial_enrichment_above_one PASSED [100%]
+
+============================= 10 passed in 9.23s ==============================
