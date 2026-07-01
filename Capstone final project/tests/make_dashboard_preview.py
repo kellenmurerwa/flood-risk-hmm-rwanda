@@ -42,8 +42,23 @@ wettest = best_date
 day = te[te["date"].dt.date == wettest].copy()
 day["pred"] = [CLASSES[i] for i in day["pred_i"]]
 
-fig = plt.figure(figsize=(13, 6.5))
-gs = fig.add_gridspec(2, 2, width_ratios=[1.5, 1], height_ratios=[1, 1])
+# cell to inspect (highest 3-day rain on the shown date) — used by the time
+# series and the per-cell transition matrix so the two panels agree
+gid = day.sort_values("rainfall_3d_mm", ascending=False)["grid_id"].iloc[0]
+
+# empirical Markov transition matrix for that cell: P(state tomorrow | today),
+# estimated from the cell's own full 2018-2024 flood-pressure history
+sfull = (df[df["grid_id"] == gid].sort_values("date")["flood_pressure_state"]
+         .map({"Low": 0, "Moderate": 1, "High": 2}).values)
+tcounts = np.zeros((3, 3))
+for a_, b_ in zip(sfull[:-1], sfull[1:]):
+    tcounts[a_, b_] += 1
+trow = tcounts.sum(axis=1, keepdims=True)
+with np.errstate(invalid="ignore", divide="ignore"):
+    Pmat = np.where(trow > 0, tcounts / trow, np.nan)
+
+fig = plt.figure(figsize=(15, 7))
+gs = fig.add_gridspec(2, 3, width_ratios=[1.6, 1, 1], height_ratios=[1, 1])
 
 # ---- panel 1: predicted-state map ----
 axm = fig.add_subplot(gs[:, 0])
@@ -62,28 +77,42 @@ n_high = int((day["pred"] == "High").sum())
 metrics = [("Cells", f"{len(day)}"),
            ("Predicted High", f"{n_high}"),
            ("Mean 3-day rain", f"{day['rainfall_3d_mm'].mean():.1f} mm"),
-           ("Model macro-F1 (2024)", "0.813")]
+           ("Macro-F1 (2024 test)", "0.813")]
 for i, (k, v) in enumerate(metrics):
-    x = 0.02 + (i % 2) * 0.5
-    y = 0.75 - (i // 2) * 0.5
-    axk.text(x, y + 0.18, v, fontsize=20, fontweight="bold", transform=axk.transAxes)
-    axk.text(x, y, k, fontsize=9, color="#555", transform=axk.transAxes)
+    y = 0.82 - i * 0.24
+    axk.text(0.03, y + 0.09, v, fontsize=17, fontweight="bold", transform=axk.transAxes)
+    axk.text(0.03, y, k, fontsize=9, color="#555", transform=axk.transAxes)
 axk.set_title("Live metrics (this date)", fontsize=10, loc="left")
 
-# ---- panel 3: a cell's rainfall time series ----
-axt = fig.add_subplot(gs[1, 1])
-gid = day.sort_values("rainfall_3d_mm", ascending=False)["grid_id"].iloc[0]
+# ---- panel 3: per-cell Markov transition matrix (the HMM intuition) ----
+axtm = fig.add_subplot(gs[0, 2])
+axtm.imshow(np.nan_to_num(Pmat), cmap="Purples", vmin=0, vmax=1)
+axtm.set_xticks(range(3)); axtm.set_yticks(range(3))
+axtm.set_xticklabels(CLASSES, fontsize=7); axtm.set_yticklabels(CLASSES, fontsize=7)
+axtm.set_xlabel("state tomorrow", fontsize=8); axtm.set_ylabel("state today", fontsize=8)
+axtm.set_title(f"Markov transitions — cell {gid}\nP(tomorrow | today)", fontsize=9)
+for i in range(3):
+    for j in range(3):
+        v = Pmat[i, j]
+        axtm.text(j, i, "—" if np.isnan(v) else f"{v:.2f}", ha="center", va="center",
+                  fontsize=8, color="white" if (not np.isnan(v) and v > 0.5) else "black")
+
+# ---- panel 4: the same cell's multi-window rainfall time series ----
+axt = fig.add_subplot(gs[1, 1:])
 series = df[df["grid_id"] == gid].set_index("date").loc["2024"]
 axt.plot(series.index, series["rainfall_1d_mm"], lw=0.7, label="1-day")
 axt.plot(series.index, series["rainfall_3d_mm"], lw=0.9, label="3-day")
 axt.plot(series.index, series["rainfall_7d_mm"], lw=0.9, label="7-day")
+axt.plot(series.index, series["rainfall_14d_mm"], lw=0.9, label="14-day")
 axt.set_title(f"Rainfall time series — cell {gid} (2024)", fontsize=10)
-axt.set_ylabel("mm"); axt.legend(fontsize=7, ncol=3)
+axt.set_ylabel("mm"); axt.legend(fontsize=7, ncol=4)
 axt.tick_params(axis="x", labelsize=7, rotation=30)
 
-fig.suptitle("Kigali Flood-Pressure Inspection Dashboard — core panels (data-driven preview)",
+fig.suptitle("Kigali Flood-Pressure Inspection Dashboard — core panels "
+             "(map · metrics · per-cell Markov transitions · rainfall dynamics)",
              fontsize=13, fontweight="bold")
 fig.tight_layout(rect=[0, 0, 1, 0.96])
 SHOTS.mkdir(parents=True, exist_ok=True)
 fig.savefig(SHOTS / "dashboard_preview.png", dpi=140)
-print(f"Saved -> {SHOTS / 'dashboard_preview.png'}  (date={wettest}, High cells={n_high})")
+print(f"Saved -> {SHOTS / 'dashboard_preview.png'}  (date={wettest}, "
+      f"High cells={n_high}, inspected cell={gid})")

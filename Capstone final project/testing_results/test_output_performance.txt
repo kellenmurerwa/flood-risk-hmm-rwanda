@@ -5,19 +5,19 @@ Host: 12 logical CPUs | XGBoost 1.7.5 | numpy 2.2.6
 
 [A] Batch-size sweep (all 12 threads)
                  batch |   mean ms |   p95 ms |     rows/sec
-                1 cell |     1.885 |    2.471 |          531
-       1 map-day (729) |     8.472 |   10.032 |       86,047
-                   10k |    87.445 |   94.669 |      114,358
-                  100k |   825.631 |  886.191 |      121,120
-   full 2024 (266,814) |  1968.755 | 2013.160 |      135,524
+                1 cell |     0.921 |    1.201 |        1,086
+       1 map-day (729) |    13.019 |   17.735 |       55,994
+                   10k |   166.622 |  183.403 |       60,016
+                  100k |  1646.205 | 1787.717 |       60,746
+   full 2024 (266,814) |  4150.433 | 4329.806 |       64,286
 
 [B] Thread sweep on the live workload (1 map-day = 729 cells)
    threads |   mean ms |   p95 ms
-         1 |    45.740 |   49.376   [OK < 2000 ms]
-         2 |    25.218 |   27.392   [OK < 2000 ms]
-         4 |    13.332 |   15.242   [OK < 2000 ms]
-        12 |     8.262 |    9.646   [OK < 2000 ms]
+         1 |    21.142 |   24.196   [OK < 2000 ms]
+         2 |    13.877 |   17.635   [OK < 2000 ms]
+         4 |    10.980 |   12.468   [OK < 2000 ms]
+        12 |     6.888 |    8.958   [OK < 2000 ms]
 
-Live single-query p95 latency: 9.65 ms (proposal NFR budget = 2000 ms) -> MET
+Live single-query p95 latency: 8.96 ms (proposal NFR budget = 2000 ms) -> MET
 
 Saved screenshot -> C:\Users\HP\Downloads\Draft-Captone Proposal Kellen\Capstone final project\testing_results\screenshots\benchmark_performance.png

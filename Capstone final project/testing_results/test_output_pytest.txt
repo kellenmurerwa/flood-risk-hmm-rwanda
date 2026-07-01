@@ -16,4 +16,4 @@ Capstone final project/tests/test_pipeline.py::test_2024_holdout_reproduces_head
 Capstone final project/tests/test_pipeline.py::test_summary_targets_consistent PASSED [ 90%]
 Capstone final project/tests/test_pipeline.py::test_spatial_enrichment_above_one PASSED [100%]
 
-============================= 10 passed in 9.23s ==============================
+============================= 10 passed in 9.27s ==============================
