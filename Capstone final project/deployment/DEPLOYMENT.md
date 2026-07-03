@@ -40,46 +40,41 @@ so the app is responsive at pilot scale on free-tier hardware.
 
 ---
 
-## 2. The artifact caveat (read first) ⚠️
+## 2. Runtime artifacts — already included ✅
 
-`real_flood_dataset.parquet` (5.8 MB) and `model_outputs_real/` (3.5 MB) are
-**`.gitignore`d** because they are reproducible (`python main.py all`). A host that
-clones the GitHub repo will therefore **not** have them and the app will fail to
-load. You must do **one** of:
+`real_flood_dataset.parquet`, `model_outputs_real/` and
+`data_cache/official_flood_polygons.geojson` are **committed in this folder**, so a
+host that clones the repo has everything and the app loads with **no data
+re-fetch**. Verified: an export of the git-tracked files only (i.e. exactly what a
+clone/deploy receives) boots the dashboard to HTTP 200 with no errors.
 
-**Option A — commit the runtime artifacts (simplest, ~9 MB, well under GitHub limits):**
-```bash
-git add -f real_flood_dataset.parquet \
-           model_outputs_real/xgboost_model.joblib \
-           model_outputs_real/results_summary.json \
-           model_outputs_real/*.png \
-           data_cache/official_flood_polygons.geojson
-git commit -m "Add runtime artifacts for deployment"
-```
+(These are normally reproducible via `python main.py all`; they are shipped here so
+the graded submission runs and deploys out of the box.)
 
-**Option B — regenerate on the host at build time** (slower, needs network):
-add `python main.py all` to the build command. Not recommended on free tiers
-(can exceed build timeouts while fetching Open-Meteo/OSM data).
-
-This repo's `Dockerfile` uses **Option A semantics** — it `COPY`s the artifacts
-from the build context, so they must exist locally (they do) when you build.
+`.streamlit/config.toml` is already at this folder's root, and `requirements.txt`
+is the slim, pinned runtime set validated for deployment.
 
 ---
 
 ## 3. Deploy — Streamlit Community Cloud (recommended, free)
 
-1. Copy `deployment/.streamlit/config.toml` to the **repo root** as `.streamlit/config.toml`.
-2. Do **Option A** above so the artifacts are in the repo, then `git push`.
-3. Go to <https://share.streamlit.io> → **New app** → pick the repo/branch.
-4. Set **Main file path** = `dashboard.py`. Click **Deploy**.
-5. You receive a public URL like `https://<app-name>.streamlit.app`.
+Everything needed (artifacts, `.streamlit/config.toml`, pinned `requirements.txt`)
+is already in place, so:
+
+1. Push this project to a GitHub repo.
+2. Go to <https://share.streamlit.io> → **New app** → pick the repo/branch.
+3. Set **Main file path** = `dashboard.py`. Click **Deploy**.
+4. You receive a public URL like `https://<app-name>.streamlit.app`.
    **Paste that URL into [`../README.md`](../README.md) "Live deployment".**
+
+> If you deploy this folder as a **subdirectory** of a larger repo, set the Main
+> file path to the full path, e.g. `Capstone final project/dashboard.py`.
 
 ## 4. Deploy — Docker (any host)
 
 ```bash
-# build context = repo root so artifacts are visible
-docker build -f "Capstone final project/deployment/Dockerfile" -t kigali-flood .
+# run from this folder (the repo root); the artifacts are already here
+docker build -f deployment/Dockerfile -t kigali-flood .
 docker run -p 8501:8501 kigali-flood
 # verify
 curl -f http://localhost:8501/_stcore/health      # -> 200
@@ -88,7 +83,8 @@ Push `kigali-flood` to any registry and run on Render/Fly/Railway/a VM.
 
 ## 5. Deploy — Render Blueprint
 
-1. Copy `render.yaml` and `.streamlit/config.toml` to the repo root; do Option A; push.
+1. Copy `render.yaml` to the repo root (artifacts and `.streamlit/config.toml` are
+   already in place); push.
 2. Render → **New +** → **Blueprint** → select the repo.
 3. Render reads `render.yaml`, builds, and serves on a public `*.onrender.com` URL.
 
