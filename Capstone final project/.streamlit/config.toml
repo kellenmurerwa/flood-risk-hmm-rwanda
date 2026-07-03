@@ -1,0 +1,15 @@
+# Copy this file to the REPO ROOT as .streamlit/config.toml before deploying
+# (Streamlit Community Cloud and `streamlit run` both read it from the repo root).
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "light"
+primaryColor = "#de2d26"          # High-pressure red, matches the map legend
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f0f4f8"

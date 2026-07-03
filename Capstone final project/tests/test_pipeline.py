@@ -3,7 +3,7 @@ Automated test suite for the Geospatial Flood-Risk HMM capstone product.
 
 Testing strategy 1 of 3 -- UNIT + INTEGRATION tests (pytest).
 
-Run:  pytest "Capstone final project/tests/test_pipeline.py" -v
+Run:  pytest "tests/test_pipeline.py" -v
 
 These tests exercise the deployed product's core contract:
   * the trained model artefacts load and expose the expected feature schema,
@@ -21,7 +21,7 @@ import joblib
 import pytest
 from sklearn.metrics import f1_score, recall_score
 
-ROOT = Path(__file__).resolve().parents[2]            # repo root
+ROOT = Path(__file__).resolve().parents[1]            # repo root
 OUT = ROOT / "model_outputs_real"
 CLASSES = ["Low", "Moderate", "High"]
 FEATURES = ["rainfall_1d_mm", "rainfall_3d_mm", "rainfall_7d_mm", "rainfall_14d_mm",

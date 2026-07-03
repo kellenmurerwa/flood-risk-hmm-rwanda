@@ -1,22 +1,15 @@
-# Geospatial Flood-Risk HMM capstone -- Python 3.11+ dependencies
-# Data handling
-numpy>=1.26
-pandas>=2.0
-pyarrow>=14.0          # parquet I/O
-openpyxl>=3.1          # read the original .xlsx dataset
-requests>=2.31         # Open-Meteo / OSM Overpass / geodata.rw REST calls
-scipy>=1.11            # cKDTree (distance-to-river), stats
-
-# Machine learning
-scikit-learn>=1.3      # baselines, RF, metrics, preprocessing
-xgboost>=1.7           # main gradient-boosted classifier
-hmmlearn>=0.3          # Hidden Markov Model temporal layer
-shap>=0.43             # feature attribution for XGBoost
-
-# Visualisation / dashboard
-matplotlib>=3.7        # figures (confusion, importance, risk map)
-streamlit>=1.30        # inspection dashboard
-pydeck>=0.8            # map layers in the dashboard
-
-# Reporting (optional -- only needed to rebuild the proposal docx/pdf)
-python-docx>=1.1
+# Runtime dependencies for the DEPLOYED Streamlit dashboard (dashboard.py).
+# Pinned to the exact versions validated end-to-end (clean venv install +
+# headless boot returning HTTP 200) so cloud deployment is deterministic.
+# xgboost is pinned to 1.7.5 to match the version the model was pickled with.
+#
+# For the full data-build / training / analysis pipeline (`python main.py all`)
+# install requirements-training.txt instead (adds shap, hmmlearn, scipy, etc.).
+streamlit==1.51.0
+pandas==2.3.3
+numpy==2.2.6
+pyarrow==21.0.0
+scikit-learn==1.7.1     # provides the estimator classes the pickled model unpickles into
+xgboost==1.7.5          # MUST match the version model_outputs_real/xgboost_model.joblib was saved with
+pydeck==0.9.1
+matplotlib==3.10.7

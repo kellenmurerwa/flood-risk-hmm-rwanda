@@ -5,7 +5,7 @@ the deployed XGBoost model -- exactly what the live app shows for a chosen date:
 the predicted Low/Moderate/High flood-pressure map over the 729-cell corridor
 grid, the top-line metrics, and a single cell's rainfall time series.
 
-Run:  python "Capstone final project/tests/make_dashboard_preview.py"
+Run:  python "tests/make_dashboard_preview.py"
 """
 from pathlib import Path
 
@@ -17,9 +17,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "model_outputs_real"
-SHOTS = ROOT / "Capstone final project" / "testing_results" / "screenshots"
+SHOTS = ROOT / "testing_results" / "screenshots"
 CLASSES = ["Low", "Moderate", "High"]
 COLORS = {"Low": "#2ca25f", "Moderate": "#feb24c", "High": "#de2d26"}
 

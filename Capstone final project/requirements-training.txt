@@ -1,0 +1,25 @@
+# Full pipeline dependencies (data build + training + analysis + reporting).
+# Use this for `python main.py all` / retraining. The deployed dashboard only
+# needs the slim, pinned runtime set in requirements.txt.
+# Geospatial Flood-Risk HMM capstone -- Python 3.11+ dependencies
+# Data handling
+numpy>=1.26
+pandas>=2.0
+pyarrow>=14.0          # parquet I/O
+openpyxl>=3.1          # read the original .xlsx dataset
+requests>=2.31         # Open-Meteo / OSM Overpass / geodata.rw REST calls
+scipy>=1.11            # cKDTree (distance-to-river), stats
+
+# Machine learning
+scikit-learn>=1.3      # baselines, RF, metrics, preprocessing
+xgboost>=1.7           # main gradient-boosted classifier
+hmmlearn>=0.3          # Hidden Markov Model temporal layer
+shap>=0.43             # feature attribution for XGBoost
+
+# Visualisation / dashboard
+matplotlib>=3.7        # figures (confusion, importance, risk map)
+streamlit>=1.30        # inspection dashboard
+pydeck>=0.8            # map layers in the dashboard
+
+# Reporting (optional -- only needed to rebuild the proposal docx/pdf)
+python-docx>=1.1

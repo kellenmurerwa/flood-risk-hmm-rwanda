@@ -29,9 +29,10 @@ through an interactive Streamlit dashboard.
 | [`deployment/`](deployment/) | Dockerfile, Streamlit/Render config, deploy guide | **Deployment (3 pts)** |
 | [`tests/`](tests/) | The test scripts (re-runnable) | Testing Results |
 
-The application source (`dashboard.py`, `main.py`, the pipeline modules) lives in
-the **repository root**, one level up; this folder is the graded submission
-package built on top of it.
+The application source (`dashboard.py`, `main.py`, the pipeline modules) and the
+runtime artifacts (`real_flood_dataset.parquet`, `model_outputs_real/`,
+`data_cache/`) are included **in this folder**, so it is a self-contained,
+runnable, and deployable final-submission package.
 
 ---
 
@@ -40,9 +41,9 @@ package built on top of it.
 **Prerequisites:** Python 3.11+ and Git, on Windows/macOS/Linux.
 
 ```bash
-# 1. Clone and enter the repo
-git clone https://github.com/kellenmurerwa/flood-risk-hmm-rwanda.git
-cd flood-risk-hmm-rwanda
+# 1. Clone and enter the repo (this final-submission project)
+git clone <your-repo-url>
+cd <repo-folder>
 
 # 2. Create and activate a virtual environment
 python -m venv .venv
@@ -65,15 +66,15 @@ python main.py dashboard          # or: streamlit run dashboard.py
 **Run the tests / regenerate the screenshots** (from the repo root):
 
 ```bash
-python -m pytest "Capstone final project/tests/test_pipeline.py" -v
-python "Capstone final project/tests/demo_data_values.py"
-python "Capstone final project/tests/benchmark_performance.py"
-python "Capstone final project/tests/make_dashboard_preview.py"
+python -m pytest tests/test_pipeline.py -v
+python tests/demo_data_values.py
+python tests/benchmark_performance.py
+python tests/make_dashboard_preview.py
 ```
 
 ---
 
-## 🗂️ Related files (in the repository root)
+## 🗂️ Project files
 
 | File | Purpose |
 |---|---|
@@ -84,8 +85,8 @@ python "Capstone final project/tests/make_dashboard_preview.py"
 | `evaluate_spatial.py` | Spatial validation (enrichment, odds ratio) + risk map |
 | `dashboard.py` | **The deployed Streamlit app** |
 | `model_outputs_real/` | Trained models, figures, `results_summary.json` |
-| `requirements.txt` | Python dependencies (also copied into this folder) |
-| `Flood_Risk_HMM_Capstone_Proposal.docx/.pdf` | The written proposal |
+| `requirements.txt` | Runtime dependencies for the dashboard (slim, pinned) |
+| `requirements-training.txt` | Full pipeline dependencies (build / train / analysis) |
 
 ---
 

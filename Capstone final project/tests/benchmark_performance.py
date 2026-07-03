@@ -13,7 +13,7 @@ model across:
 It reports throughput (rows/sec) and p50/p95 latency, and saves a screenshot
 to testing_results/screenshots/benchmark_performance.png.
 
-Run:  python "Capstone final project/tests/benchmark_performance.py"
+Run:  python "tests/benchmark_performance.py"
 """
 import os
 import time
@@ -26,9 +26,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "model_outputs_real"
-SHOTS = ROOT / "Capstone final project" / "testing_results" / "screenshots"
+SHOTS = ROOT / "testing_results" / "screenshots"
 FEATURES = ["rainfall_1d_mm", "rainfall_3d_mm", "rainfall_7d_mm", "rainfall_14d_mm",
             "elevation_m", "slope_deg", "distance_to_river_m",
             "road_density_km_per_km2", "building_density_count_per_km2",

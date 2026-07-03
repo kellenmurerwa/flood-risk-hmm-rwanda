@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# NOTE: runtime artifacts (real_flood_dataset.parquet, model_outputs_real/,
+# data_cache/) are intentionally NOT ignored here -- they are part of this
+# final-submission package so the app/dashboard runs and deploys from a fresh
+# clone without re-fetching data. Regenerate them with `python main.py all`.

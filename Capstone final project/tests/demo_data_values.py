@@ -11,7 +11,7 @@ riverside cell -> High; a dry spell on high ground -> Low).
 A bar-chart screenshot of the scenario probabilities is saved to
 testing_results/screenshots/demo_data_values.png.
 
-Run:  python "Capstone final project/tests/demo_data_values.py"
+Run:  python "tests/demo_data_values.py"
 """
 from pathlib import Path
 
@@ -22,9 +22,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "model_outputs_real"
-SHOTS = ROOT / "Capstone final project" / "testing_results" / "screenshots"
+SHOTS = ROOT / "testing_results" / "screenshots"
 CLASSES = ["Low", "Moderate", "High"]
 FEATURES = ["rainfall_1d_mm", "rainfall_3d_mm", "rainfall_7d_mm", "rainfall_14d_mm",
             "elevation_m", "slope_deg", "distance_to_river_m",
