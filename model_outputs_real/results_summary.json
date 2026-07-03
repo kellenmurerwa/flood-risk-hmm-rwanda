@@ -1,0 +1,197 @@
+{
+  "dataset": {
+    "rows": 1864053,
+    "cells": 729,
+    "days": 2557,
+    "period": "2018-2024",
+    "test_period": "2024",
+    "train_rows": 1331154,
+    "validation_rows": 266085,
+    "test_rows": 266814
+  },
+  "split_protocol": {
+    "type": "temporal (chronological, no shuffle)",
+    "train": "2018-2022 (fit model parameters)",
+    "validation": "2023 (held-out year: generalisation / over-fit check)",
+    "test": "2024 (final untouched hold-out: headline metrics)",
+    "note": "Cells are NOT split across sets -- every grid cell appears in all three periods; only the time axis is partitioned, which is the correct protocol for a temporal forecasting task."
+  },
+  "data_sources": {
+    "rainfall": "Open-Meteo ERA5 (real)",
+    "elevation": "Open-Meteo/SRTM (real)",
+    "rivers_roads_buildings": "OpenStreetMap Overpass (real)",
+    "flood_polygon": "Rwanda GeoPortal / MOE official flood-risk polygons (real)"
+  },
+  "supervised_results": {
+    "LogisticRegression": {
+      "macro_f1": 0.7497722863686646,
+      "accuracy": 0.7810422241711454,
+      "high_recall": 0.8185794972128908,
+      "splits": {
+        "train": {
+          "macro_f1": 0.7315246741065963,
+          "accuracy": 0.7470180009225078,
+          "high_recall": 0.7686342159121431
+        },
+        "validation": {
+          "macro_f1": 0.7404800412619034,
+          "accuracy": 0.7701599113065374,
+          "high_recall": 0.7959627214793531
+        },
+        "test": {
+          "macro_f1": 0.7497722863686646,
+          "accuracy": 0.7810422241711454,
+          "high_recall": 0.8185794972128908
+        }
+      }
+    },
+    "DecisionTree": {
+      "macro_f1": 0.7497179296579256,
+      "accuracy": 0.7798953578148073,
+      "high_recall": 0.7975746613016353,
+      "splits": {
+        "train": {
+          "macro_f1": 0.7398279157968636,
+          "accuracy": 0.7512211209221472,
+          "high_recall": 0.7393990292767999
+        },
+        "validation": {
+          "macro_f1": 0.742586564331782,
+          "accuracy": 0.7693368660390477,
+          "high_recall": 0.7714296238995101
+        },
+        "test": {
+          "macro_f1": 0.7497179296579256,
+          "accuracy": 0.7798953578148073,
+          "high_recall": 0.7975746613016353
+        }
+      }
+    },
+    "RandomForest": {
+      "macro_f1": 0.8125962690890821,
+      "accuracy": 0.8335881925236307,
+      "high_recall": 0.8493669016944148,
+      "splits": {
+        "train": {
+          "macro_f1": 0.8130308595630767,
+          "accuracy": 0.8213114335381181,
+          "high_recall": 0.8239079363998502
+        },
+        "validation": {
+          "macro_f1": 0.8058609511311641,
+          "accuracy": 0.8254166901554014,
+          "high_recall": 0.8322282388477548
+        },
+        "test": {
+          "macro_f1": 0.8125962690890821,
+          "accuracy": 0.8335881925236307,
+          "high_recall": 0.8493669016944148
+        }
+      },
+      "spatial_agreement_high_in_zone": 0.29393579997278013
+    },
+    "XGBoost": {
+      "macro_f1": 0.8126842424356943,
+      "accuracy": 0.8332508788894136,
+      "high_recall": 0.8434604451991583,
+      "splits": {
+        "train": {
+          "macro_f1": 0.8035294344553826,
+          "accuracy": 0.812941252477174,
+          "high_recall": 0.8079549366533126
+        },
+        "validation": {
+          "macro_f1": 0.8052102035618129,
+          "accuracy": 0.8251949564988631,
+          "high_recall": 0.8319888017092129
+        },
+        "test": {
+          "macro_f1": 0.8126842424356943,
+          "accuracy": 0.8332508788894136,
+          "high_recall": 0.8434604451991583
+        }
+      },
+      "spatial_agreement_high_in_zone": 0.29820999824318256
+    },
+    "RainfallThreshold": {
+      "macro_f1": 0.6264419216549583,
+      "accuracy": 0.6571431783939373,
+      "high_recall": 0.9021558566207686,
+      "splits": {
+        "train": {
+          "macro_f1": 0.5943679562722655,
+          "accuracy": 0.5997119792300515,
+          "high_recall": 0.8759812210835329
+        },
+        "validation": {
+          "macro_f1": 0.6109056478406368,
+          "accuracy": 0.6405396771708288,
+          "high_recall": 0.9029727041662062
+        },
+        "test": {
+          "macro_f1": 0.6264419216549583,
+          "accuracy": 0.6571431783939373,
+          "high_recall": 0.9021558566207686
+        }
+      }
+    },
+    "StaticPolygon": {
+      "macro_f1": 0.32402405790519556,
+      "accuracy": 0.5079643496967925,
+      "high_recall": 0.29229576580899996,
+      "splits": {
+        "train": {
+          "macro_f1": 0.3220623755649312,
+          "accuracy": 0.48152129655922604,
+          "high_recall": 0.3130941707428718
+        },
+        "validation": {
+          "macro_f1": 0.32741284122263226,
+          "accuracy": 0.5012759080744875,
+          "high_recall": 0.3103657862747265
+        },
+        "test": {
+          "macro_f1": 0.32402405790519556,
+          "accuracy": 0.5079643496967925,
+          "high_recall": 0.29229576580899996
+        }
+      }
+    }
+  },
+  "hmm": {
+    "decoded_state_accuracy": 0.4496406486296259,
+    "next_step_accuracy": 0.44468916838939443,
+    "spatial_agreement_high_in_zone": 0.1861439048179911,
+    "transition_matrix": [
+      [
+        0.8340866559541323,
+        0.1584516860502987,
+        0.00746165799556905
+      ],
+      [
+        0.08158684638115188,
+        0.8000933743559775,
+        0.11831977926287068
+      ],
+      [
+        0.0,
+        0.09379797368401725,
+        0.9062020263159827
+      ]
+    ]
+  },
+  "targets_met": {
+    "macro_f1>=0.75": true,
+    "high_recall>=0.80": true,
+    "spatial_agreement>=0.70": false
+  },
+  "spatial_validation": {
+    "official_zone_base_rate": 0.18655692729766804,
+    "share_predicted_high_in_official_zone": 0.29820999824318256,
+    "enrichment_lift": 1.5984932994064711,
+    "high_rate_inside_zone": 0.30691497910639665,
+    "high_rate_outside_zone": 0.1656484117988555,
+    "inside_outside_odds_ratio": 1.852809669428519,
+    "interpretation": "Official national polygons cover only ~19% of the corridor; predicted-High pressure is enriched in the official zone but extends beyond it, reflecting the dynamic rainfall-driven footprint the static map omits."
+  }
+}

@@ -48,10 +48,12 @@ flood zones while capturing a broader rainfall-driven footprint).
 
 ```bash
 python -m venv .venv && .venv\Scripts\activate      # Windows (PowerShell: .venv\Scripts\Activate.ps1)
-pip install -r requirements.txt
 
-python main.py all          # build -> train -> evaluate  (fetches real data, ~minutes)
-python main.py dashboard    # launch the Streamlit inspection app
+pip install -r requirements.txt            # runtime deps for the dashboard (slim, pinned)
+python main.py dashboard                   # launch the Streamlit inspection app
+
+pip install -r requirements-training.txt   # + build/train/analysis pipeline (adds shap, hmmlearn, ...)
+python main.py all                         # build -> train -> evaluate  (fetches real data, ~minutes)
 ```
 
 Individual stages: `python main.py build | polygons | train | evaluate | dashboard`.
