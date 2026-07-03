@@ -21,4 +21,4 @@ Scenario: Extreme rain, valley floor, in official flood zone
 Monotonicity check P(High) across rising-rainfall scenarios: [0.0, 0.983, 1.0, 1.0]
 PASS: P(High) is non-decreasing as rainfall/exposure increase (tolerance 1e-3 at saturation).
 
-Saved screenshot -> C:\Users\HP\Downloads\Draft-Captone Proposal Kellen\Capstone final project\testing_results\screenshots\demo_data_values.png
+Saved screenshot -> Capstone final project\testing_results\screenshots\demo_data_values.png

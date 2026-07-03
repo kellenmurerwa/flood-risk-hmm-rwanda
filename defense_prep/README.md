@@ -20,6 +20,6 @@ defense confident.
 6. **Day 7:** Light review; rest.
 
 ## The three answers you must nail
-1. **Circularity:** unobserved drainage/noise term → realistic 0.83, not a circular 0.99.
+1. **Circularity:** unobserved drainage/noise term → realistic 0.81 macro-F1 (0.83 accuracy), not a circular 0.99.
 2. **ERA5 vs CHIRPS:** ERA5 is reproducible and was verified live; CHIRPS was tested but fragile → future work.
-3. **The 0.30 spatial number:** official layer covers only 19% of the corridor, so containment is capped; the fair, honest measures are enrichment 1.59× and odds 1.84×.
+3. **The 0.30 spatial number:** official layer covers only 19% of the corridor, so containment is capped; the fair, honest measures are enrichment 1.60× and odds 1.85×.

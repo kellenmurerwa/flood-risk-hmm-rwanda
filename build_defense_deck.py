@@ -88,7 +88,7 @@ bullets(s, [
     "AOI: lon 29.98–30.04, lat −2.03–−1.97 (Kigali).",
     "250 m grid → 729 cells.",
     "Daily, 2018–2024 → 1,864,053 cell-day records.",
-    "Train 2018–2023 · test on unseen 2024.",
+    "Temporal split: train 2018–2022 · validation 2023 · test on unseen 2024.",
     "AOI deliberately shifted south onto the real MOE flood zone (centroid ≈ 30.054, −1.994).",
 ], width=7.2)
 image(s, "flood_pressure_risk_map.png", left=8.0, top=1.7, width=4.9)
@@ -122,7 +122,7 @@ bullets(s, [
     "Label = top-20% / next-30% / lowest-50% of a rainfall×susceptibility score.",
     "Added an UNOBSERVED drainage latent + daily noise the model cannot see.",
     ("Without it, models hit 0.99 F1 — a circular, indefensible result.", 1),
-    ("With it, F1 ≈ 0.83 — realistic and honest.", 1),
+    ("With it, F1 ≈ 0.81 — realistic and honest.", 1),
     "Flood-PRESSURE = derived risk state, NOT a confirmed flood event.",
 ], width=11.5)
 
@@ -133,18 +133,19 @@ bullets(s, [
     "Interpretable: Logistic Regression, Decision Tree.",
     "Main: Random Forest, XGBoost (+ SHAP explainability).",
     "Temporal layer: Gaussian HMM over daily sequences.",
-    "Strict temporal hold-out: train 2018–23, test on unseen 2024.",
+    "Temporal split (no shuffle): train 2018–22, validate 2023, test on unseen 2024.",
+    "Train ≈ validation ≈ test macro-F1 (no over-fitting; generalises across years).",
     "Metrics: macro-F1, High-recall, confusion, next-step accuracy, spatial concordance.",
 ], width=11.5)
 
 # 8 Results table
-s = slide(); title_bar(s, "Results — 2024 hold-out", "Targets: macro-F1 ≥ 0.75, High-recall ≥ 0.80")
+s = slide(); title_bar(s, "Results — 2024 test hold-out", "Targets: macro-F1 ≥ 0.75, High-recall ≥ 0.80")
 rows = [["Model", "Macro-F1", "High-recall"],
-        ["Random Forest", "0.831", "0.867"],
-        ["XGBoost", "0.813", "0.847"],
-        ["Decision Tree", "0.753", "0.793"],
-        ["Logistic Regression", "0.749", "0.821"],
-        ["Rainfall-threshold (baseline)", "0.623", "—"],
+        ["XGBoost  (deployed, best)", "0.813", "0.843"],
+        ["Random Forest", "0.813", "0.849"],
+        ["Decision Tree", "0.750", "0.798"],
+        ["Logistic Regression", "0.750", "0.819"],
+        ["Rainfall-threshold (baseline)", "0.626", "—"],
         ["Static-polygon (baseline)", "0.324", "—"]]
 tbl = s.shapes.add_table(len(rows), 3, Inches(0.8), Inches(1.9),
                          Inches(7.2), Inches(4.4)).table
@@ -159,7 +160,7 @@ for ri, row in enumerate(rows):
             cell.fill.solid(); cell.fill.fore_color.rgb = NAVY
         elif ri in (1, 2):
             cell.fill.solid(); cell.fill.fore_color.rgb = RGBColor(0xE5, 0xF0, 0xE9)
-image(s, "confusion_RandomForest.png", left=8.4, top=1.9, width=4.4)
+image(s, "confusion_XGBoost.png", left=8.4, top=1.9, width=4.4)
 
 # 9 Explainability
 s = slide(); title_bar(s, "Explainability — SHAP & feature importance")
@@ -177,6 +178,8 @@ bullets(s, [
     "Pressure PERSISTS once it sets in after sustained rain.",
     "Transitions move between neighbouring states, not Low→High jumps.",
     "Next-step accuracy 0.45 over 3 states (random = 0.33).",
+    ("Dashboard now shows a PER-CELL transition matrix: P(state tomorrow | today) "
+     "for any selected cell — the Markov intuition, cell by cell.", 0),
 ], width=6.0)
 image(s, "hmm_transition_matrix.png", left=7.0, top=1.7, width=5.4)
 
@@ -186,8 +189,8 @@ bullets(s, [
     "Official zone covers only 19% of the corridor → a fixed ‘70% inside’ target is geometrically impossible without circular labels.",
     "Reformulated to enrichment & odds ratio:",
     ("Raw containment of predicted-High in official zone: 0.30.", 1),
-    ("Enrichment / lift: 1.59× over the 18.7% base rate.", 1),
-    ("Inside-vs-outside High odds: 1.84× (30.7% vs 16.7%).", 1),
+    ("Enrichment / lift: 1.60× over the 18.7% base rate.", 1),
+    ("Inside-vs-outside High odds: 1.85× (30.7% vs 16.7%).", 1),
     "Model re-discovers the official zone WITHOUT training on it, and flags a broader dynamic footprint — the project's core contribution.",
 ], width=11.6)
 
@@ -197,6 +200,7 @@ bullets(s, [
     "Pick any date → predicted flood-pressure map over the grid.",
     "Overlay official flood polygons.",
     "Inspect any cell: predictors, class probabilities, rainfall time series.",
+    "Per-cell Markov transition matrix + train/validation/test performance panels.",
     "Model & HMM performance panels built in.",
     "Run: python main.py dashboard",
 ], width=11.5)
@@ -223,18 +227,18 @@ bullets(s, [
 # 15 Conclusion
 s = slide(); title_bar(s, "Conclusion")
 bullets(s, [
-    "All five objectives met on REAL, open data with a strict temporal hold-out.",
-    "RF macro-F1 0.831, High-recall 0.867; baselines clearly beaten.",
-    "Model independently reinforces (1.59×) and extends the official flood map.",
+    "All five objectives met on REAL, open data with a temporal train/val/test split.",
+    "XGBoost (deployed) macro-F1 0.813, High-recall 0.843; baselines clearly beaten.",
+    "Model independently reinforces (1.60×) and extends the official flood map.",
     "A reproducible, interpretable, time-aware flood-pressure tool for Kigali.",
 ], width=11.6)
 
 # 16 Anticipated questions
 s = slide(); title_bar(s, "Anticipated Panel Questions")
 bullets(s, [
-    "“Is your label circular?” → No — unobserved drainage latent + noise; F1 0.83 not 0.99.",
+    "“Is your label circular?” → No — unobserved drainage latent + noise; F1 0.81 not 0.99.",
     "“Why ERA5 not CHIRPS?” → Reproducible keyless access; CHIRPS tested but fragile (future work).",
-    "“Why did spatial agreement miss 70%?” → Coarse 19% official layer; reframed to enrichment 1.59×.",
+    "“Why did spatial agreement miss 70%?” → Coarse 19% official layer; reframed to enrichment 1.60×.",
     "“Pressure vs event?” → Derived risk state; event validation needs MINEMA records.",
     "“Does it generalise?” → Tested on a future unseen year (2024), not random split.",
 ], width=11.8, size=17)
@@ -277,21 +281,23 @@ NOTES = [
  "the label would be a formula the model could simply reverse-engineer — and "
  "indeed an early version scored 0.99 F1, which is a warning sign, not a success. "
  "So I added an unobserved drainage-and-noise term the model cannot see, which "
- "drops performance to a realistic 0.83. Flood-pressure is a derived risk state, "
+ "drops performance to a realistic 0.81. Flood-pressure is a derived risk state, "
  "not a confirmed flood event.",
  # 7 Models
  "I benchmark against two naive baselines so the machine learning has to earn its "
  "place, then interpretable models, then Random Forest and XGBoost with SHAP, and "
- "finally a Hidden Markov Model for the time dimension. Crucially I evaluate on a "
- "temporal hold-out: I train on 2018 to 2023 and test on the completely unseen "
- "year 2024 — so this is generalisation, not memorisation.",
+ "finally a Hidden Markov Model for the time dimension. Crucially I use a temporal "
+ "split with no shuffling: I fit on 2018 to 2022, hold out 2023 as a validation "
+ "year to check for over-fitting, and test on the completely unseen year 2024. "
+ "Macro-F1 is almost identical across train, validation and test — so this is "
+ "genuine generalisation, not memorisation.",
  # 8 Results
- "On 2024, Random Forest is best with a macro-F1 of 0.831 and high-pressure "
- "recall of 0.867 — both above the 0.75 and 0.80 targets. XGBoost is close "
- "behind. Both baselines are clearly beaten — the rainfall-only baseline reaches "
- "just 0.62 — which proves the geospatial context adds real value. The confusion "
- "matrix shows strong Low and High detection; most error is on the transitional "
- "Moderate class, which is expected.",
+ "On 2024, XGBoost — my deployed model — is the best with a macro-F1 of 0.813 and "
+ "high-pressure recall of 0.843, both above the 0.75 and 0.80 targets; Random "
+ "Forest ties on F1 with slightly higher recall. Both baselines are clearly "
+ "beaten — the rainfall-only baseline reaches just 0.63 — which proves the "
+ "geospatial context adds real value. The confusion matrix shows strong Low and "
+ "High detection; most error is on the transitional Moderate class, which is expected.",
  # 9 Explainability
  "SHAP confirms the model is hydrologically sensible: 3- and 7-day rainfall "
  "dominate, followed by low elevation and closeness to a river. That is exactly "
@@ -307,8 +313,8 @@ NOTES = [
  "cells inside the official polygons. But that layer covers only 19% of my "
  "corridor, so 70% is mathematically impossible unless I make the label circular. "
  "I therefore reframed it to enrichment and an odds ratio. Predicted high-pressure "
- "is 1.59 times more concentrated in official zones than chance, and official "
- "cells are flagged high 1.84 times more often than others — and the model never "
+ "is 1.60 times more concentrated in official zones than chance, and official "
+ "cells are flagged high 1.85 times more often than others — and the model never "
  "saw those polygons in training. It rediscovers the official zone and extends it, "
  "which is the core contribution.",
  # 12 Dashboard
@@ -330,8 +336,8 @@ NOTES = [
  "CHIRPS and Meteo Rwanda, adding wetness indices, hyper-parameter tuning, and an "
  "operational daily dashboard.",
  # 15 Conclusion
- "To conclude: all five objectives are met on real, open data with a strict "
- "temporal hold-out. The framework is accurate, interpretable, agrees with and "
+ "To conclude: all five objectives are met on real, open data with a temporal "
+ "train, validation and test split. The framework is accurate, interpretable, agrees with and "
  "extends the official flood map, and is fully reproducible. Thank you — I "
  "welcome your questions.",
  # 16 Q&A

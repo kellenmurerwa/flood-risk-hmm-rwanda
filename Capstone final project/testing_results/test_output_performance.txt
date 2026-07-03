@@ -20,4 +20,4 @@ Host: 12 logical CPUs | XGBoost 1.7.5 | numpy 2.2.6
 
 Live single-query p95 latency: 8.96 ms (proposal NFR budget = 2000 ms) -> MET
 
-Saved screenshot -> C:\Users\HP\Downloads\Draft-Captone Proposal Kellen\Capstone final project\testing_results\screenshots\benchmark_performance.png
+Saved screenshot -> Capstone final project\testing_results\screenshots\benchmark_performance.png

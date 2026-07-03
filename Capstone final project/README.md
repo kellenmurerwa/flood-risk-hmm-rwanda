@@ -41,8 +41,8 @@ package built on top of it.
 
 ```bash
 # 1. Clone and enter the repo
-git clone <your-repo-url>
-cd "Draft-Captone Proposal Kellen"
+git clone https://github.com/kellenmurerwa/flood-risk-hmm-rwanda.git
+cd flood-risk-hmm-rwanda
 
 # 2. Create and activate a virtual environment
 python -m venv .venv
